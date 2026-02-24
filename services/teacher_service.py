@@ -31,11 +31,16 @@ class TeacherService:
             email=email,
             password_hash=AuthService.hash_password(password),
         )
-        self.db.add(teacher)
-        self.db.commit()
-        self.db.refresh(teacher)
-        logger.info(f"Teacher created: {teacher.full_name}")
-        return teacher
+        try:
+            self.db.add(teacher)
+            self.db.commit()
+            self.db.refresh(teacher)
+            logger.info(f"Teacher created: {teacher.full_name}")
+            return teacher
+        except Exception as e:
+            self.db.rollback()
+            logger.error(f"Error creating teacher: {e}")
+            raise
 
     def update(self, teacher_id: int, full_name: str, email: str, password: str = None) -> Teacher:
         teacher = self.get_by_id(teacher_id)
@@ -49,14 +54,24 @@ class TeacherService:
         teacher.email = email
         if password:
             teacher.password_hash = AuthService.hash_password(password)
-        self.db.commit()
-        self.db.refresh(teacher)
-        return teacher
+        try:
+            self.db.commit()
+            self.db.refresh(teacher)
+            return teacher
+        except Exception as e:
+            self.db.rollback()
+            logger.error(f"Error updating teacher: {e}")
+            raise
 
     def delete(self, teacher_id: int):
         teacher = self.get_by_id(teacher_id)
         if not teacher:
             raise ValueError("Teacher not found.")
-        self.db.delete(teacher)
-        self.db.commit()
-        logger.info(f"Teacher deleted id={teacher_id}")
+        try:
+            self.db.delete(teacher)
+            self.db.commit()
+            logger.info(f"Teacher deleted id={teacher_id}")
+        except Exception as e:
+            self.db.rollback()
+            logger.error(f"Error deleting teacher: {e}")
+            raise

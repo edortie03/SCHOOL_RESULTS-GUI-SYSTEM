@@ -44,11 +44,16 @@ class ResultService:
             gpa=gpa,
             remarks=remarks,
         )
-        self.db.add(result)
-        self.db.commit()
-        self.db.refresh(result)
-        logger.info(f"Result added: student={student_id} subject={subject_id} marks={marks} grade={grade}")
-        return result
+        try:
+            self.db.add(result)
+            self.db.commit()
+            self.db.refresh(result)
+            logger.info(f"Result added: student={student_id} subject={subject_id} marks={marks} grade={grade}")
+            return result
+        except Exception as e:
+            self.db.rollback()
+            logger.error(f"Error adding result: {e}")
+            raise
 
     def update_result(self, result_id: int, marks: float) -> Result:
         if marks < 0 or marks > 100:
@@ -61,17 +66,27 @@ class ResultService:
         result.grade = grade
         result.gpa = gpa
         result.remarks = remarks
-        self.db.commit()
-        self.db.refresh(result)
-        return result
+        try:
+            self.db.commit()
+            self.db.refresh(result)
+            return result
+        except Exception as e:
+            self.db.rollback()
+            logger.error(f"Error updating result: {e}")
+            raise
 
     def delete_result(self, result_id: int):
         result = self.get_by_id(result_id)
         if not result:
             raise ValueError("Result not found.")
-        self.db.delete(result)
-        self.db.commit()
-        logger.info(f"Result deleted id={result_id}")
+        try:
+            self.db.delete(result)
+            self.db.commit()
+            logger.info(f"Result deleted id={result_id}")
+        except Exception as e:
+            self.db.rollback()
+            logger.error(f"Error deleting result: {e}")
+            raise
 
     def get_class_results(self, class_id: int):
         """Get all results for students in a class."""

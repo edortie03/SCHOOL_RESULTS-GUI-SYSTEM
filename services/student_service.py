@@ -44,7 +44,7 @@ class StudentService:
         return students, total
 
     def create(self, admission_number: str, first_name: str, last_name: str,
-               gender: str, date_of_birth=None, class_id: int = None) -> Student:
+               gender: str, date_of_birth=None, class_id: int = None, password_hash: str = None) -> Student:
         if self.get_by_admission(admission_number):
             raise ValueError(f"Student with admission number '{admission_number}' already exists.")
         student = Student(
@@ -54,12 +54,18 @@ class StudentService:
             gender=gender,
             date_of_birth=date_of_birth,
             class_id=class_id,
+            password_hash=password_hash,
         )
-        self.db.add(student)
-        self.db.commit()
-        self.db.refresh(student)
-        logger.info(f"Student created: {student.full_name} ({student.admission_number})")
-        return student
+        try:
+            self.db.add(student)
+            self.db.commit()
+            self.db.refresh(student)
+            logger.info(f"Student created: {student.full_name} ({student.admission_number})")
+            return student
+        except Exception as e:
+            self.db.rollback()
+            logger.error(f"Error creating student: {e}")
+            raise
 
     def update(self, student_id: int, admission_number: str, first_name: str, last_name: str,
                gender: str, date_of_birth=None, class_id: int = None) -> Student:
@@ -75,14 +81,24 @@ class StudentService:
         student.gender = gender
         student.date_of_birth = date_of_birth
         student.class_id = class_id
-        self.db.commit()
-        self.db.refresh(student)
-        return student
+        try:
+            self.db.commit()
+            self.db.refresh(student)
+            return student
+        except Exception as e:
+            self.db.rollback()
+            logger.error(f"Error updating student: {e}")
+            raise
 
     def delete(self, student_id: int):
         student = self.get_by_id(student_id)
         if not student:
             raise ValueError("Student not found.")
-        self.db.delete(student)
-        self.db.commit()
-        logger.info(f"Student deleted id={student_id}")
+        try:
+            self.db.delete(student)
+            self.db.commit()
+            logger.info(f"Student deleted id={student_id}")
+        except Exception as e:
+            self.db.rollback()
+            logger.error(f"Error deleting student: {e}")
+            raise

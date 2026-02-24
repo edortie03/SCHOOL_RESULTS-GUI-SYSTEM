@@ -20,11 +20,16 @@ class ClassService:
 
     def create(self, class_name: str, academic_year: str) -> Class:
         cls = Class(class_name=class_name.strip(), academic_year=academic_year.strip())
-        self.db.add(cls)
-        self.db.commit()
-        self.db.refresh(cls)
-        logger.info(f"Class created: {cls.class_name}")
-        return cls
+        try:
+            self.db.add(cls)
+            self.db.commit()
+            self.db.refresh(cls)
+            logger.info(f"Class created: {cls.class_name}")
+            return cls
+        except Exception as e:
+            self.db.rollback()
+            logger.error(f"Error creating class: {e}")
+            raise
 
     def update(self, class_id: int, class_name: str, academic_year: str) -> Class:
         cls = self.get_by_id(class_id)
@@ -32,14 +37,24 @@ class ClassService:
             raise ValueError("Class not found.")
         cls.class_name = class_name.strip()
         cls.academic_year = academic_year.strip()
-        self.db.commit()
-        self.db.refresh(cls)
-        return cls
+        try:
+            self.db.commit()
+            self.db.refresh(cls)
+            return cls
+        except Exception as e:
+            self.db.rollback()
+            logger.error(f"Error updating class: {e}")
+            raise
 
     def delete(self, class_id: int):
         cls = self.get_by_id(class_id)
         if not cls:
             raise ValueError("Class not found.")
-        self.db.delete(cls)
-        self.db.commit()
-        logger.info(f"Class deleted id={class_id}")
+        try:
+            self.db.delete(cls)
+            self.db.commit()
+            logger.info(f"Class deleted id={class_id}")
+        except Exception as e:
+            self.db.rollback()
+            logger.error(f"Error deleting class: {e}")
+            raise

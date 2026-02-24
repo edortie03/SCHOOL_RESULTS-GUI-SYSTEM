@@ -30,11 +30,16 @@ class SubjectService:
             class_id=class_id,
             teacher_id=teacher_id,
         )
-        self.db.add(subject)
-        self.db.commit()
-        self.db.refresh(subject)
-        logger.info(f"Subject created: {subject.subject_name}")
-        return subject
+        try:
+            self.db.add(subject)
+            self.db.commit()
+            self.db.refresh(subject)
+            logger.info(f"Subject created: {subject.subject_name}")
+            return subject
+        except Exception as e:
+            self.db.rollback()
+            logger.error(f"Error creating subject: {e}")
+            raise
 
     def update(self, subject_id: int, subject_name: str, class_id: int = None, teacher_id: int = None) -> Subject:
         subject = self.get_by_id(subject_id)
@@ -43,14 +48,24 @@ class SubjectService:
         subject.subject_name = subject_name.strip()
         subject.class_id = class_id
         subject.teacher_id = teacher_id
-        self.db.commit()
-        self.db.refresh(subject)
-        return subject
+        try:
+            self.db.commit()
+            self.db.refresh(subject)
+            return subject
+        except Exception as e:
+            self.db.rollback()
+            logger.error(f"Error updating subject: {e}")
+            raise
 
     def delete(self, subject_id: int):
         subject = self.get_by_id(subject_id)
         if not subject:
             raise ValueError("Subject not found.")
-        self.db.delete(subject)
-        self.db.commit()
-        logger.info(f"Subject deleted id={subject_id}")
+        try:
+            self.db.delete(subject)
+            self.db.commit()
+            logger.info(f"Subject deleted id={subject_id}")
+        except Exception as e:
+            self.db.rollback()
+            logger.error(f"Error deleting subject: {e}")
+            raise

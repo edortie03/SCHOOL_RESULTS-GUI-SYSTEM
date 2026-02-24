@@ -17,6 +17,7 @@ class Student(Base):
     gender = Column(String(10), nullable=False)
     date_of_birth = Column(Date, nullable=True)
     class_id = Column(Integer, ForeignKey("classes.id"), nullable=True)
+    password_hash = Column(String(255), nullable=True)  # For student login
     created_at = Column(DateTime, default=datetime.utcnow)
 
     # Relationships

@@ -60,16 +60,16 @@ class Application(tk.Tk):
         from views.login_view import LoginView
         LoginView(self, on_login_success=self._authenticate)
 
-    def _authenticate(self, email: str, password: str):
+    def _authenticate(self, email: str, password: str, admission_number: str = None):
         db = SessionLocal()
         try:
-            user, role = AuthService(db).login(email, password)
+            user, role = AuthService(db).login(email, password, admission_number)
         finally:
             db.close()
 
         if not user:
             messagebox.showerror("Login Failed",
-                                 "Invalid email or password. Please try again.")
+                                 "Invalid credentials. Please try again.")
             return
 
         # Close login window
@@ -92,6 +92,10 @@ class Application(tk.Tk):
         elif role == "TEACHER":
             from views.teacher_dashboard import TeacherDashboard
             self._current_dashboard = TeacherDashboard(
+                self, user, logout_callback=self._logout)
+        elif role == "STUDENT":
+            from views.student_dashboard import StudentDashboard
+            self._current_dashboard = StudentDashboard(
                 self, user, logout_callback=self._logout)
         else:
             messagebox.showerror("Access Denied", f"Unknown role: {role}")
