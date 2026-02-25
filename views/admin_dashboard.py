@@ -20,7 +20,8 @@ from config import SessionLocal
 
 class AdminDashboard(BaseDashboard):
     def __init__(self, master, user, logout_callback):
-        self._db = SessionLocal()
+        self._user = user
+        self._logout_callback = logout_callback
         self._init_services()
         self.NAV_ITEMS = [
             ("Dashboard",   self._show_overview),
@@ -36,14 +37,14 @@ class AdminDashboard(BaseDashboard):
         self._nav_click("Dashboard", self._show_overview)
 
     def _init_services(self):
-        db = self._db
-        self.student_svc = StudentService(db)
-        self.teacher_svc = TeacherService(db)
-        self.class_svc = ClassService(db)
-        self.subject_svc = SubjectService(db)
-        self.result_svc = ResultService(db)
-        self.report_svc = ReportService(db)
-        self.analytics_svc = AnalyticsService(db)
+        # Create separate session for each service to prevent transaction issues
+        self.student_svc = StudentService(SessionLocal())
+        self.teacher_svc = TeacherService(SessionLocal())
+        self.class_svc = ClassService(SessionLocal())
+        self.subject_svc = SubjectService(SessionLocal())
+        self.result_svc = ResultService(SessionLocal())
+        self.report_svc = ReportService(SessionLocal())
+        self.analytics_svc = AnalyticsService(SessionLocal())
 
     def _show_overview(self):
         self.update_section_title("Dashboard Overview")

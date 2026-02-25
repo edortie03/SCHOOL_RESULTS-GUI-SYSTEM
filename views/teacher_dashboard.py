@@ -11,7 +11,8 @@ from config import SessionLocal
 
 class TeacherDashboard(BaseDashboard):
     def __init__(self, master, user, logout_callback):
-        self._db = SessionLocal()
+        self._user = user
+        self._logout_callback = logout_callback
         self._init_services(user)
         self.NAV_ITEMS = [
             ("My Subjects & Marks", self._show_results),
@@ -21,11 +22,11 @@ class TeacherDashboard(BaseDashboard):
         self._nav_click("My Subjects & Marks", self._show_results)
 
     def _init_services(self, user):
-        db = self._db
-        self.student_svc = StudentService(db)
-        self.subject_svc = SubjectService(db)
-        self.result_svc = ResultService(db)
-        self.class_svc = ClassService(db)
+        # Create separate session for each service to prevent transaction issues
+        self.student_svc = StudentService(SessionLocal())
+        self.subject_svc = SubjectService(SessionLocal())
+        self.result_svc = ResultService(SessionLocal())
+        self.class_svc = ClassService(SessionLocal())
 
     def _show_results(self):
         self.update_section_title("Enter Student Marks")
