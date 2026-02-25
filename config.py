@@ -102,6 +102,8 @@ def get_db():
 def init_db():
     """Initialize database — create all tables."""
     try:
+        # Clear any cached metadata to ensure fresh table inspection
+        Base.metadata.clear()
         Base.metadata.create_all(bind=engine)
         logger.info("Database tables created successfully.")
     except Exception as e:

@@ -14,6 +14,11 @@ class StudentService:
         self.db = db
 
     def get_all(self):
+        # Ensure session is fresh before query
+        try:
+            self.db.rollback()
+        except:
+            pass
         return self.db.query(Student).order_by(Student.first_name).all()
 
     def get_by_id(self, student_id: int):
@@ -27,6 +32,11 @@ class StudentService:
 
     def search(self, query: str, class_id: int = None, page: int = 1, page_size: int = 20):
         """Search students with optional class filter and pagination."""
+        # Ensure session is fresh before query
+        try:
+            self.db.rollback()
+        except:
+            pass
         q = self.db.query(Student)
         if query:
             pattern = f"%{query}%"

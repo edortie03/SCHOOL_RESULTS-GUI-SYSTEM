@@ -13,6 +13,11 @@ class ResultService:
         self.db = db
 
     def get_all(self):
+        # Ensure session is fresh before query
+        try:
+            self.db.rollback()
+        except:
+            pass
         return self.db.query(Result).all()
 
     def get_by_id(self, result_id: int):

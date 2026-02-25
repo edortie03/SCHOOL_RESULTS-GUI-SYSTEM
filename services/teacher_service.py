@@ -14,13 +14,28 @@ class TeacherService:
         self.db = db
 
     def get_all(self):
+        # Ensure session is fresh before query
+        try:
+            self.db.rollback()
+        except:
+            pass
         return self.db.query(Teacher).order_by(Teacher.full_name).all()
 
     def get_by_id(self, teacher_id: int):
         return self.db.query(Teacher).filter(Teacher.id == teacher_id).first()
 
     def get_by_email(self, email: str):
-        return self.db.query(Teacher).filter(Teacher.email == email.strip().lower()).first()
+        # Ensure clean session state and use explicit columns
+        try:
+            self.db.rollback()
+        except:
+            pass
+        try:
+            return self.db.query(Teacher).filter(Teacher.email == email.strip().lower()).first()
+        except Exception as e:
+            # If error, try to expire session and retry
+            self.db.expire_all()
+            return self.db.query(Teacher).filter(Teacher.email == email.strip().lower()).first()
 
     def create(self, full_name: str, email: str, password: str) -> Teacher:
         email = email.strip().lower()

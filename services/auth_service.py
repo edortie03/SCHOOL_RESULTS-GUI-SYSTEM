@@ -33,6 +33,11 @@ class AuthService:
             password: Password for authentication
             admission_number: Admission number for student login (optional, uses email if not provided)
         """
+        # Ensure clean session state
+        try:
+            self.db.rollback()
+        except:
+            pass
         
         # Try student login first if admission_number is provided
         if admission_number:

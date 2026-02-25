@@ -71,6 +71,11 @@ class AnalyticsService:
 
     def total_stats(self):
         """Return dict with overall stats."""
+        # Ensure session is fresh before query
+        try:
+            self.db.rollback()
+        except:
+            pass
         total_students = self.db.query(Student).count()
         total_results = self.db.query(Result).count()
         avg_marks = self.db.query(func.avg(Result.marks)).scalar() or 0
