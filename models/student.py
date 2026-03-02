@@ -6,7 +6,6 @@ from sqlalchemy import Column, Integer, String, Date, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 from config import Base
 
-
 class Student(Base):
     __tablename__ = "students"
 
@@ -20,7 +19,7 @@ class Student(Base):
     password_hash = Column(String(255), nullable=True)  # For student login
     created_at = Column(DateTime, default=datetime.utcnow)
 
-    # Relationships
+    # Relationships to other models
     class_ = relationship("Class", back_populates="students")
     results = relationship("Result", back_populates="student", cascade="all, delete-orphan")
 
